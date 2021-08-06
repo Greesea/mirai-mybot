@@ -1,0 +1,20 @@
+{
+  "name": "mirai-mybot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "axios": "^0.21.1",
+    "bili-api": "^1.6.0",
+    "fast-xml-parser": "^3.19.0",
+    "js-yaml": "^4.1.0",
+    "mirai-ts": "^2.0.0-alpha.5",
+    "sharp": "^0.28.3"
+  },
+  "devDependencies": {}
+}

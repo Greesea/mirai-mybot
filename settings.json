@@ -1,0 +1,11 @@
+{
+    "botNumber": 0,
+    "thumbnailMaximumSize": {
+        "width": 150,
+        "height": 150,
+        "fit": "inside"
+    },
+    "miraiRoot": "/absolute/path/to/mirai",
+    "miraiHttpConfigPath": "./config/net.mamoe.mirai-api-http/setting.yml",
+    "miraiHttpCachePath": "./data/net.mamoe.mirai-api-http/mirai-mybot/cache"
+}
