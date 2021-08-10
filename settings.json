@@ -1,11 +1,19 @@
 {
     "botNumber": 0,
+    "waitAutoReloginTimeout": 60,
+
+    "requestTimeout": 10,
+    "requestUserAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36",
+
+    "thumbnailDownloadTimeout": 10,
     "thumbnailMaximumSize": {
         "width": 150,
         "height": 150,
         "fit": "inside"
     },
+
     "miraiRoot": "/absolute/path/to/mirai",
+    "miraiAutoLoginConfigPath": "./config/Console/AutoLogin.yml",
     "miraiHttpConfigPath": "./config/net.mamoe.mirai-api-http/setting.yml",
     "miraiHttpCachePath": "./data/net.mamoe.mirai-api-http/mirai-mybot/cache"
 }

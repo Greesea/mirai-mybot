@@ -1,6 +1,6 @@
 {
   "name": "mirai-mybot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,9 +9,12 @@
   "author": "",
   "license": "",
   "dependencies": {
+    "@suen/music-api": "^1.1.16",
     "axios": "^0.21.1",
     "bili-api": "^1.6.0",
     "fast-xml-parser": "^3.19.0",
+    "got": "^11.8.2",
+    "he": "^1.2.0",
     "js-yaml": "^4.1.0",
     "mirai-ts": "^2.0.0-alpha.5",
     "sharp": "^0.28.3"
