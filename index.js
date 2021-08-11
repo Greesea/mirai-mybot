@@ -14,7 +14,7 @@ const Mirai = require("mirai-ts"),
 
 let __settings;
 try {
-    __settings = JSON.parse(fs.readFileSync("./settings.json", { encoding: "utf-8" }));
+    __settings = JSON.parse(fs.existsSync("./settings.dev.json") ? fs.readFileSync("./settings.dev.json", { encoding: "utf-8" }) : fs.readFileSync("./settings.json", { encoding: "utf-8" }));
 } catch (e) {
     console.error("invalid settings");
     return;
