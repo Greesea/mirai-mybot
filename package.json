@@ -11,6 +11,7 @@
   "dependencies": {
     "@suen/music-api": "^1.1.16",
     "axios": "^0.21.1",
+    "bandcamp-scraper": "^1.4.1",
     "bili-api": "^1.6.0",
     "fast-xml-parser": "^3.19.0",
     "got": "^11.8.2",
