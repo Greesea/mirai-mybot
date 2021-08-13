@@ -9,13 +9,13 @@ export default class SinaWeiboSite extends Site {
     name = "SinaWeibo";
     regex = /(m\.weibo\.cn\/status\/.+)|(weibo\.com\/.+\/.+)/i;
 
-    // isMobile = /m\.weibo\.cn\/status\/.+/i;
+    //              $render_data = [..............][0] || {}
     contentRegex = /(?<=\$render_data\s?=\s?\[).+?(?=\]\[0\]\s?\|\|\s?\{\})/is;
 
     async generateMessage(urlItem) {
         console.log(`[${this.name}] new url, ${urlItem.url}`);
 
-        let id = (new URL(urlItem.url).pathname).split("/");
+        let id = new URL(urlItem.url).pathname.split("/");
         id = id.length > 1 ? id[id.length - 1] : "";
         if (id == null || id === "")
             return new ReplyMessage(CreateMessageChain.plain(`[${this.name}] 获取微博ID失败：${urlItem.url}`));
@@ -27,8 +27,6 @@ export default class SinaWeiboSite extends Site {
                 method: "get",
                 url: `https://m.weibo.cn/status/${id}`,
                 headers: {
-                    "dnt": 1,
-                    "upgrade-insecure-requests": 1,
                     "User-Agent": requestUserAgentMobile
                 },
             });
