@@ -5,7 +5,7 @@ import {thumbnailDownloader} from "../utils.mjs";
 
 import musicAPI from "@suen/music-api";
 
-export class MusicSite extends Site {
+export default class MusicSite extends Site {
     name = "Music";
     regex = /(y\.qq\.com\/.+?song.+)|(music\.163\.com\/song.+)/i;
 

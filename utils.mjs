@@ -21,6 +21,23 @@ import {axiosSettings, thumbnailMaximumSize, thumbnailDownloadTimeout, miraiRoot
 export const axiosInstance = axios.create(axiosSettings);
 
 /**
+ * @param {string} dirPath
+ * @returns {Promise<ShortURLSite[]|Site[]>}
+ */
+export const loadSites = async (dirPath) => {
+    let instances = [];
+    for (const siteModuleName of fs.readdirSync(dirPath)) {
+        let {default: moduleClass} = await import(`${dirPath}/${siteModuleName}`);
+        if (!(moduleClass instanceof Function))
+            continue;
+
+        instances.push(new moduleClass());
+    }
+
+    return instances;
+}
+
+/**
  * @param {string} url
  * @returns {Promise<string|null>}
  */

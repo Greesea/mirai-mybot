@@ -3,7 +3,7 @@ import {CreateMessageChain} from "../types/MessageChain.mjs";
 import {ReplyMessage} from "../types/ReplyMessage.mjs";
 import {axiosInstance, thumbnailDownloader} from "../utils.mjs";
 
-export class YoutubeSite extends Site {
+export default class YoutubeSite extends Site {
     name = "Youtube";
     regex = /(youtu\.be\/.+)|(youtube\.com\/watch?.+)/i;
 

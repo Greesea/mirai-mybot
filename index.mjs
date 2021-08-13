@@ -4,25 +4,25 @@ import sharp from "sharp";
 import Mirai from "mirai-ts";
 
 import {botNumber, waitAutoReloginTimeout, miraiHttpSettings, miraiHttpCacheAbsolutePath, miraiAutoLoginSettings} from "./settings.mjs";
-import {matchURLFromMessageChain} from "./utils.mjs";
+import {loadSites, matchURLFromMessageChain} from "./utils.mjs";
 import {CreateMessageChain} from "./types/MessageChain.mjs";
 
-import {BilibiliShortURLSite} from "./shortURLSites/Bilibili.mjs";
-import {BilibiliVideoSite} from "./sites/BilibiliVideo.mjs";
-import {YoutubeSite} from "./sites/Youtube.mjs";
-import {MusicSite} from "./sites/Music.mjs";
-
-//region initialize
-sharp.cache(false); //disable sharp cache feature
-if (!fs.existsSync(miraiHttpCacheAbsolutePath))
-    fs.mkdirSync(miraiHttpCacheAbsolutePath, {recursive: true}); //prepare cache dir
-const mirai = new Mirai(miraiHttpSettings);
-matchURLFromMessageChain.shortURLSites = [new BilibiliShortURLSite()];
-matchURLFromMessageChain.sites = [new BilibiliVideoSite(), new YoutubeSite(), new MusicSite()];
-//endregion
-
 const run = async () => {
+    //region initialize
+    console.log(`[core] initializing`);
+    sharp.cache(false); //disable sharp cache feature
+    if (!fs.existsSync(miraiHttpCacheAbsolutePath))
+        fs.mkdirSync(miraiHttpCacheAbsolutePath, {recursive: true}); //prepare cache dir
+    const mirai = new Mirai(miraiHttpSettings);
+    matchURLFromMessageChain.shortURLSites = await loadSites("./shortURLSites");
+    console.log(`[core] loaded ${matchURLFromMessageChain.shortURLSites.length} shortURLSites`);
+    matchURLFromMessageChain.sites = await loadSites("./sites");
+    console.log(`[core] loaded ${matchURLFromMessageChain.sites.length} sites`);
+    console.log(`[core] initialize complete`);
+    //endregion
+
     const miraiMybotBootup = async () => {
+        console.log(`[core] booting mirai-ts`);
         await mirai.link(botNumber);
         mirai.listen();
     };

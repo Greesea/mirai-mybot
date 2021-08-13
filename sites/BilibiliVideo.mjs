@@ -8,7 +8,7 @@ import got from "got";
 
 import {requestTimeout, requestUserAgent} from "../settings.mjs";
 
-export class BilibiliVideoSite extends Site {
+export default class BilibiliVideoSite extends Site {
     name = "Bilibili Video";
     regex = /bilibili\.com\/video\/((av)|(bv)).+/i;
 
