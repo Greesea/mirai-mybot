@@ -19,7 +19,9 @@ try {
 export const {
         botNumber,
         waitAutoReloginTimeout = 0,
-        requestTimeout = 10, requestUserAgent,
+        requestTimeout = 10,
+        requestUserAgent,
+        requestUserAgentMobile,
         thumbnailDownloadTimeout = 10,
         thumbnailMaximumSize,
         miraiRoot,
@@ -30,6 +32,9 @@ export const {
     axiosSettings = {
         timeout: requestTimeout * 1000,
         headers: {
+            "Accept-Language": "zh-CN;q=0.9,zh;q=0.8,en-GB;q=0.7,en-US;q=0.6",
+            "DNT": 1,
+            "Upgrade-Insecure-Requests": 1,
             "User-Agent": requestUserAgent, //default useragent
         },
     },
