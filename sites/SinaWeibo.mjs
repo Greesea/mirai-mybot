@@ -1,7 +1,7 @@
 import {Site} from "../types/Site.mjs";
 import {CreateMessageChain} from "../types/MessageChain.mjs";
 import {ReplyMessage} from "../types/ReplyMessage.mjs";
-import {axiosInstance, thumbnailDownloader} from "../utils.mjs";
+import {axiosInstance, getValueFromURL, thumbnailDownloader} from "../utils.mjs";
 
 import {requestUserAgentMobile} from "../settings.mjs";
 
@@ -15,8 +15,7 @@ export default class SinaWeiboSite extends Site {
     async generateMessage(urlItem) {
         console.log(`[${this.name}] new url, ${urlItem.url}`);
 
-        let id = new URL(urlItem.url).pathname.split("/");
-        id = id.length > 1 ? id[id.length - 1] : "";
+        let id = getValueFromURL(urlItem.url, -1);
         if (id == null || id === "")
             return new ReplyMessage(CreateMessageChain.plain(`[${this.name}] 获取微博ID失败：${urlItem.url}`));
 

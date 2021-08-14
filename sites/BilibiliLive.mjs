@@ -1,7 +1,7 @@
 import {Site} from "../types/Site.mjs";
 import {CreateMessageChain} from "../types/MessageChain.mjs";
 import {ReplyMessage} from "../types/ReplyMessage.mjs";
-import {thumbnailDownloader} from "../utils.mjs";
+import {getValueFromURL, thumbnailDownloader} from "../utils.mjs";
 
 import biliAPI from "bili-api";
 import got from "got";
@@ -29,9 +29,7 @@ export default class BilibiliLiveSite extends Site {
     async generateMessage(urlItem) {
         console.log(`[${this.name}] new url, ${urlItem.url}`);
 
-        let urlObj = new URL(urlItem.url);
-        let id = urlObj.pathname.split("/");
-        id = id.length > 1 ? id[id.length - 1] : "";
+        let id = getValueFromURL(urlItem.url, -1);
         if (id == null || id === "")
             return new ReplyMessage(CreateMessageChain.plain(`[${this.name}] 获取直播间ID失败：${urlItem.url}`));
 

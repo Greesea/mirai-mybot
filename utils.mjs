@@ -21,6 +21,23 @@ import {axiosSettings, thumbnailMaximumSize, thumbnailDownloadTimeout, miraiRoot
 export const axiosInstance = axios.create(axiosSettings);
 
 /**
+ * @param {string|URL} url
+ * @param {number} index
+ * @returns {string|null}
+ */
+export const getValueFromURL = (url, index = 0) => {
+    let urlObject = url instanceof URL ? url : new URL(url);
+    let array = urlObject.pathname.split("/").filter(item => item != null && item !== "");
+    let targetIndex = index;
+    if (index < 0) {
+        targetIndex = index % array.length;
+        if (targetIndex !== 0)
+            targetIndex += array.length
+    }
+    return array[targetIndex];
+};
+
+/**
  * @param {string} dirPath
  * @returns {Promise<ShortURLSite[]|Site[]>}
  */

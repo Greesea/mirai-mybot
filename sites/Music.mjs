@@ -1,7 +1,7 @@
 import {Site} from "../types/Site.mjs";
 import {CreateMessageChain} from "../types/MessageChain.mjs";
 import {ReplyMessage} from "../types/ReplyMessage.mjs";
-import {thumbnailDownloader} from "../utils.mjs";
+import {getValueFromURL, thumbnailDownloader} from "../utils.mjs";
 
 import musicAPI from "@suen/music-api";
 
@@ -32,9 +32,7 @@ export default class MusicSite extends Site {
                 id = urlObj.searchParams.get("songid");
                 if (id == null) {
                     qq_isMid = true;
-                    let urlPath = urlObj.pathname.split("/");
-                    if (urlPath.length > 1 && urlPath[urlPath.length - 2] === "songDetail" && urlPath[urlPath.length - 1] != null)
-                        id = urlPath[urlPath.length - 1];
+                    id = getValueFromURL(urlObj, -1);
                 }
                 break;
             case this.vendors.netease:
