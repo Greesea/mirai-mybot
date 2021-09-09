@@ -40,6 +40,10 @@ const run = async () => {
             console.log(`[Message] done. ${item.urlItem.raw}`);
         }
     });
+    mirai.on("BotInvitedJoinGroupRequestEvent", async (incomeMessage) => {
+        console.log(`[InvitedJoinGroupRequest] from ${incomeMessage.nick}(${incomeMessage.fromId}), join ${incomeMessage.groupName}(${incomeMessage.groupId}), decision: ${incomeMessage.fromId === masterNumber ? `accept` : "denied"}`);
+        await incomeMessage.respond(incomeMessage.fromId === masterNumber ? 0 : 1);
+    });
 
     // noinspection ES6MissingAwait
     (async () => {
