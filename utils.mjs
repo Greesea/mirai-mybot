@@ -132,11 +132,19 @@ export const convertVideoToGif = async (sourcePath, targetPath, sourceInfo, conf
 export const decodeShortURL = async (url) => {
     try {
         console.log(`[DecodeShortURL] decoding ${url}`);
-        await axiosInstance({
+        let {data} = await axiosInstance({
             method: "get",
             url: url,
             maxRedirects: 0,
         });
+        console.log(`[DecodeShortURL] use content match`);
+
+        let result = (data.match(decodeShortURL.metaHttpEquivRegex) || [])[0];
+        if (result == null || result === "") {
+            console.log(`[DecodeShortURL] content match failed, ignore`);
+            return null;
+        }
+        return result;
     } catch (e) {
         if (e?.code) {
             console.log(`[DecodeShortURL] error: ${e.code}`);
@@ -147,6 +155,7 @@ export const decodeShortURL = async (url) => {
 
     return null;
 };
+decodeShortURL.metaHttpEquivRegex = /(?<=http-equiv=\1refresh(["'])\scontent=(["'])\d+?;url=).+?(?=\2)/i;
 
 /**
  * @param {string} targetURL
@@ -183,7 +192,7 @@ export const download = async (targetURL, savePath, timeout = 0) => {
  */
 export const thumbnailDownloader = async (url) => {
     let id = ++thumbnailDownloader.sequence;
-    let extension = url.split(".");
+    let extension = new URL(url).pathname.split(".");
     extension = extension.length > 1 ? extension[extension.length - 1] : null;
     let thumbnailRelativePath = path.join(miraiHttpCachePath, `./__thumbnail_${id}${extension ? "." + extension : ""}`);
     let thumbnailAbsolutePath = path.resolve(miraiRoot, thumbnailRelativePath);
