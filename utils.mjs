@@ -16,7 +16,7 @@ import {MatchedURL} from "./types/MatchedURL.mjs";
 import {ShortURLSite} from "./types/ShortURLSite.mjs";
 import {Site} from "./types/Site.mjs";
 
-import {axiosSettings, thumbnailMaximumSize, thumbnailDownloadTimeout, miraiRoot, miraiHttpCachePath, miraiHttpCacheAbsolutePath, fastXmlParserOptions} from "./settings.mjs";
+import {axiosSettings, thumbnailMaximumSize, thumbnailDownloadTimeout, miraiRoot, miraiHttpCachePath, miraiHttpCacheAbsolutePath, miraiHttpSettings, fastXmlParserOptions} from "./settings.mjs";
 
 export const axiosInstance = axios.create(axiosSettings);
 
@@ -210,3 +210,62 @@ matchURLFromMessageChain.shortURLSites = [];
  * @type {Site[]}
  */
 matchURLFromMessageChain.sites = [];
+
+/**
+ * @param {number} botNumber
+ * @returns {Promise<{sessionKey: string, botNumber: number, release: (function(): Promise<void>), url: string}|void>}
+ */
+export const getMiraiHttpSession = async (botNumber) => {
+    if (
+        !(miraiHttpSettings?.adapters ?? []).includes("http") ||
+        !miraiHttpSettings?.adapterSettings?.http?.host ||
+        !miraiHttpSettings?.adapterSettings?.http?.port
+    )
+        return;
+    let url = `http://${miraiHttpSettings.adapterSettings.http.host}:${miraiHttpSettings.adapterSettings.http.port}`
+    let response;
+    let sessionKey;
+
+    try {
+        //region get session
+        response = await axiosInstance.post(`${url}/verify`, {
+            verifyKey: miraiHttpSettings?.verifyKey,
+        });
+        if (response?.data?.code !== 0 || !response?.data?.session)
+            return;
+        sessionKey = response.data.session;
+        //endregion
+
+        //region try to bind
+        response = await axiosInstance.post(`${url}/bind`, {
+            sessionKey,
+            qq: botNumber,
+        });
+        if (response?.data?.code !== 0)
+            return;
+        //endregion
+    } catch (e) {
+        return;
+    }
+
+    return {
+        url,
+        botNumber,
+        sessionKey,
+        release: getMiraiHttpSession.releaseSession,
+    };
+};
+getMiraiHttpSession.releaseSession = async function () {
+    try {
+        //region release session
+        let response = await axiosInstance.post(`${this.url}/release`, {
+            sessionKey: this.sessionKey,
+            qq: this.botNumber,
+        });
+        if (response?.data?.code !== 0)
+            throw true;
+        //endregion
+    } catch (e) {
+        console.log(`[getMiraiHttpSession] release session failed. ${this.sessionKey}`);
+    }
+};
