@@ -53,15 +53,15 @@ export default class TwitterSite extends Site {
             return new ReplyMessage(CreateMessageChain.plain(`[${this.name}] 获取信息失败：${id}`));
         }
 
-        let videoItem = (response?.extended_entities?.media ?? []).find(item => item.type === "video");
-        if (!videoItem) //only support video type
+        let videoItem = (response?.extended_entities?.media ?? []).find(item => item.type === "video" || item.type === "animated_gif");
+        if (!videoItem) //only support video and animated_gif type
             return;
 
         let replyMessage = new ReplyMessage();
         let imageRelativePath;
         let imageAbsolutePath;
         try {
-            let videoFileInfo = (videoItem?.video_info?.variants ?? []).reduce((match, item) => item?.bitrate ?? 0 > match?.bitrate ?? 0 ? item : match, null);
+            let videoFileInfo = (videoItem?.video_info?.variants ?? []).reduce((match, item) => (item?.bitrate ?? 0) > (match?.bitrate ?? -1) ? item : match, null);
             if (!videoItem)
                 throw true;
             ({relativePath: imageRelativePath, absolutePath: imageAbsolutePath} = await videoDownloader(
@@ -97,6 +97,4 @@ export default class TwitterSite extends Site {
 
         return replyMessage;
     }
-
-
 }
