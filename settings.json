@@ -19,5 +19,23 @@
     "miraiHttpConfigPath": "./config/net.mamoe.mirai-api-http/setting.yml",
     "miraiHttpCachePath": "./data/net.mamoe.mirai-api-http/mirai-mybot/cache",
 
-    "extra": {}
+    "extra": {
+        "twitter": {
+            "bearerToken": "token",
+            "video": {
+                "fileSizeLimitBytes": 5242880,
+                "highQualityDurationLimitMilliseconds": 8000,
+                "highQuality": {
+                    "frameRate": 10,
+                    "width": 250,
+                    "height": 250
+                },
+                "lowQuality": {
+                    "frameRate": 8,
+                    "width": 150,
+                    "height": 150
+                }
+            }
+        }
+    }
 }
