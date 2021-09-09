@@ -43,7 +43,6 @@ const run = async () => {
         "control.service.pause": (() => {
             let fn = async () => {
                 botControl.service.status = false;
-                botControl.service.silence = true;
 
                 console.log(`[Command] service.status set to false`);
                 return CreateMessageChain.plain(`done`);
