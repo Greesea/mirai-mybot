@@ -52,12 +52,12 @@ export default class SinaWeiboSite extends Site {
         if (isVideo) {
             if (response.status?.page_info?.page_pic?.url)
                 thumbnailUrl = response.status.page_info.page_pic.url;
-            content = response?.status?.page_info?.content2;
+            content = response.status?.content2 ?? response.status?.status_title;
             author = response?.status?.user?.screen_name;
         } else {
             if (response.status?.pics?.length)
                 thumbnailUrl = response.status.pics[0]?.url;
-            content = `${(response.status?.text ?? "").substring(0, 15)}${(response.status?.text ?? "").length > 15 ? "..." : ""}`;
+            content = response.status?.status_title;
             author = response?.status?.user?.screen_name;
         }
 
