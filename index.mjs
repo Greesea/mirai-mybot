@@ -5,7 +5,7 @@ import Mirai from "mirai-ts";
 
 import {botNumber, masterNumber, botHeartbeatGroupNumber, botHeartbeatInterval, miraiHttpSettings, miraiHttpCacheAbsolutePath,} from "./settings.mjs";
 import {loadSites, matchURLFromMessageChain} from "./utils.mjs";
-import {CreateMessageChain} from "./types/MessageChain.mjs";
+import {CreateMessageChain, MessageTypes} from "./types/MessageChain.mjs";
 
 const run = async () => {
     //region initialize
@@ -26,10 +26,73 @@ const run = async () => {
         await mirai.link(botNumber);
         mirai.listen();
     };
+    const botControl = {
+        service: {
+            status: true,
+        },
+    };
+    const botCommands = {
+        "help": (() => {
+            let fn = async () => {
+                return CreateMessageChain.plain(`${Object.keys(botCommands).map(command => `${command} | ${botCommands[command].description}`).join("\n")}`);
+            };
+            fn.description = "print command help";
 
+            return fn;
+        })(),
+        "control.service.pause": (() => {
+            let fn = async () => {
+                botControl.service.status = false;
+                botControl.service.silence = true;
+
+                console.log(`[Command] service.status set to false`);
+                return CreateMessageChain.plain(`done`);
+            };
+            fn.description = "pause url preview service";
+
+            return fn;
+        })(),
+        "control.service.resume": (() => {
+            let fn = async () => {
+                botControl.service.status = true;
+                console.log(`[Command] service.status set to true`);
+                return CreateMessageChain.plain(`done`);
+            };
+            fn.description = "resume url preview service";
+
+            return fn;
+        })(),
+        "dump.control": (() => {
+            let fn = async () => {
+                return CreateMessageChain.plain(`${JSON.stringify(botControl, null, 4)}`);
+            };
+            fn.description = "dump current botControl data";
+
+            return fn;
+        })(),
+    };
+    botCommands["?"] = botCommands["help"];
+
+    mirai.on("FriendMessage", async (incomeMessage) => {
+        if (incomeMessage?.sender?.id !== masterNumber)
+            return;
+
+        let commandText = (incomeMessage.messageChain ?? []).find(item => item?.type === MessageTypes.plain)?.text ?? "";
+        console.log(`[Command] incoming command: ${commandText}`);
+        if (!botCommands[commandText])
+            return;
+        let response = await botCommands[commandText]();
+        if (!response)
+            return;
+
+        await incomeMessage.reply(response.items);
+    });
     mirai.on("GroupMessage", async (incomeMessage) => {
         let matched = (await matchURLFromMessageChain(incomeMessage.messageChain)) ?? [];
         console.log(`[Message] from ${incomeMessage?.sender?.group?.name}, found: ${matched.length} url`);
+
+        if (!matched.length || !botControl.service.status)
+            return;
         for (const item of matched) {
             let message = await item.generateMessage();
             if (!message)
