@@ -8,8 +8,8 @@
 
     "thumbnailDownloadTimeout": 10,
     "thumbnailMaximumSize": {
-        "width": 150,
-        "height": 150,
+        "width": 250,
+        "height": 250,
         "fit": "inside"
     },
 
