@@ -3,6 +3,7 @@ import path from "path";
 import axios from "axios";
 import sharp from "sharp";
 import fastXmlParser from "fast-xml-parser";
+import childprocess from "child_process";
 
 //region import {Message as MiraiMessage} from "MiraiMessage"
 import Mirai from "mirai-ts";
@@ -53,6 +54,76 @@ export const loadSites = async (dirPath) => {
 
     return instances;
 }
+
+/**
+ * @param {string} command
+ * @param {string[]} args
+ * @param {{}} options
+ * @param {Function} stdout
+ * @param {Function} stderr
+ * @returns {Promise<void>}
+ */
+export const runCommand = (command, args, options, stdout, stderr) => {
+    let process = childprocess.spawn(command, args ?? [], options);
+    process.stdout.on("data", stdout || (() => {
+    }));
+    process.stderr.on("data", stderr || (() => {
+    }));
+
+    return new Promise((resolve, reject) => {
+        process.on("close", code => {
+            if (code === 0)
+                resolve();
+            else {
+                if (stderr)
+                    stderr();
+                reject();
+            }
+        });
+    });
+};
+
+/**
+ * @param {string} sourcePath absolutePath
+ * @param {string} targetPath absolutePath
+ * @param {{ratio:{x:number, y:number}}} sourceInfo
+ * @param {{width:number, height:number, frameRate:number}} config
+ * @param {boolean} lossy
+ * @returns {Promise<void>}
+ */
+export const convertVideoToGif = async (sourcePath, targetPath, sourceInfo, config, lossy = false) => {
+    let auto = sourceInfo?.ratio ?
+        (sourceInfo.ratio.x ?? 0) > (sourceInfo.ratio.y ?? 0) ? "height" : "width" :
+        (config?.width ?? 0) > (config?.height ?? 0) ? "height" : "width";
+    let scale = `${auto === "width" ? "-1" : config?.width ?? 0}:${auto === "height" ? "-1" : config?.height ?? 0}`;
+
+    await runCommand(
+        "ffmpeg",
+        [
+            `-y`,
+            `-loglevel`, `error`,
+            `-i`, sourcePath,
+        ].concat(
+            lossy ?
+                [
+                    `-r`, config?.frameRate ?? 10,
+                    `-vf`, `scale=${scale}`,
+                ] :
+                [
+                    `-vf`, `${config?.frameRate ? `fps=${config?.frameRate},` : ""}scale=${scale}:flags=full_chroma_int,split [a][b];[a] palettegen=max_colors=255:reserve_transparent=1:stats_mode=diff [p];[b][p] paletteuse=dither=none:bayer_scale=5:diff_mode=rectangle:new=1`
+                ]
+        ).concat([targetPath]),
+        {},
+        out => {
+            if (out)
+                console.log(out.toString().trimEnd());
+        },
+        err => {
+            if (err)
+                console.warn(err.toString().trimEnd());
+        }
+    );
+};
 
 /**
  * @param {string} url
@@ -141,6 +212,58 @@ export const thumbnailDownloader = async (url) => {
     return {thumbnailRelativePath, thumbnailAbsolutePath};
 };
 thumbnailDownloader.sequence = 0;
+
+/**
+ * @param {string} url
+ * @param {{ratio:{x:number, y:number}, duration:number}} sourceInfo
+ * @param {{fileSizeLimitBytes:number, highQualityDurationLimitMilliseconds:number, maximumSize:{frameRate:number, width:number,height:number}, minimumSize:{frameRate:number, width:number,height:number}}} compressConfig
+ * @returns {Promise<{}|{relativePath: string, absolutePath: [string, string]}>}
+ */
+export const videoDownloader = async (url, sourceInfo = {}, compressConfig = {}) => {
+    let id = ++videoDownloader.sequence;
+    let extension = new URL(url).pathname.split(".");
+    extension = extension.length > 1 ? extension[extension.length - 1] : null;
+    let relativePath = path.join(miraiHttpCachePath, `./__video_${id}${extension ? "." + extension : ""}`);
+    let absolutePath = path.resolve(miraiRoot, relativePath);
+    let gifRelativePath = `${relativePath}.gif`;
+    let gifAbsolutePath = `${absolutePath}.gif`;
+
+    try {
+        console.log(`[VideoDownloader] starting ${id}, ${url}`);
+        await download(url, absolutePath, thumbnailDownloadTimeout * 1000);
+        console.log(`[VideoDownloader] download complete ${id}, ${url}`);
+    } catch (e) {
+        console.warn(`[VideoDownloader] download failed, seqid: ${id}, ${url}`);
+        return {};
+    }
+
+    try {
+        let latestFileSize = sourceInfo.duration > compressConfig.highQualityDurationLimitMilliseconds ? 0 : null;
+        while (true) {
+            console.log(`[VideoDownloader] creating gif using ${latestFileSize == null ? "highQuality" : "lowQuality"} configuration`);
+            await convertVideoToGif(absolutePath, gifAbsolutePath, sourceInfo, compressConfig[latestFileSize == null ? "highQuality" : "lowQuality"], latestFileSize != null);
+            let fileSize = fs.statSync(gifAbsolutePath).size;
+            if (fileSize < compressConfig.fileSizeLimitBytes) {
+                latestFileSize = fileSize;
+                break;
+            } else if (latestFileSize != null) {
+                console.warn(`[VideoDownloader] create gif failed. exceed fileSizeLimit, seqid:${id}, fileSize:${Math.round(fileSize / 1024)}K`);
+                return {};
+            }
+
+            latestFileSize = fileSize;
+            console.log(`[VideoDownloader] gif exceed fileSizeLimit, seqid:${id}, fileSize:${Math.round(fileSize / 1024)}K`);
+        }
+
+        console.log(`[VideoDownloader] create gif complete, seqid:${id}, fileSize: ${Math.round(latestFileSize / 1024)}K`);
+    } catch (e) {
+        console.warn(`[VideoDownloader] create gif failed, seqid: ${id}, ${url}`);
+        throw e;
+    }
+
+    return {relativePath: gifRelativePath, absolutePath: [absolutePath, gifAbsolutePath]};
+};
+videoDownloader.sequence = 0;
 
 /**
  * @param {MiraiMessage[]} messageChain incoming message
