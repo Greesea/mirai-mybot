@@ -18,16 +18,18 @@ try {
 
 export const {
         botNumber,
-        waitAutoReloginTimeout = 0,
+        masterNumber = 0,
+        botHeartbeatGroupNumber,
+        botHeartbeatInterval = 300,
         requestTimeout = 10,
         requestUserAgent,
         requestUserAgentMobile,
         thumbnailDownloadTimeout = 10,
         thumbnailMaximumSize,
         miraiRoot,
-        miraiAutoLoginConfigPath,
         miraiHttpConfigPath,
-        miraiHttpCachePath
+        miraiHttpCachePath,
+        extra,
     } = {...__settings},
     axiosSettings = {
         timeout: requestTimeout * 1000,
@@ -39,7 +41,6 @@ export const {
         },
     },
     miraiHttpCacheAbsolutePath = path.resolve(miraiRoot, miraiHttpCachePath),
-    miraiAutoLoginSettings = yaml.load(fs.readFileSync(path.resolve(miraiRoot, miraiAutoLoginConfigPath), "utf-8")),
     miraiHttpSettings = yaml.load(fs.readFileSync(path.resolve(miraiRoot, miraiHttpConfigPath), "utf-8")),
     fastXmlParserOptions = {
         ignoreAttributes: false,

@@ -3,14 +3,14 @@ import sharp from "sharp";
 
 import Mirai from "mirai-ts";
 
-import {botNumber, waitAutoReloginTimeout, miraiHttpSettings, miraiHttpCacheAbsolutePath, miraiAutoLoginSettings} from "./settings.mjs";
+import {botNumber, masterNumber, botHeartbeatGroupNumber, botHeartbeatInterval, miraiHttpSettings, miraiHttpCacheAbsolutePath,} from "./settings.mjs";
 import {loadSites, matchURLFromMessageChain} from "./utils.mjs";
 import {CreateMessageChain} from "./types/MessageChain.mjs";
 
 const run = async () => {
     //region initialize
     console.log(`[core] initializing`);
-    sharp.cache(false); //disable sharp cache feature
+    sharp?.cache(false); //disable sharp cache feature
     if (!fs.existsSync(miraiHttpCacheAbsolutePath))
         fs.mkdirSync(miraiHttpCacheAbsolutePath, {recursive: true}); //prepare cache dir
     const mirai = new Mirai(miraiHttpSettings);
@@ -41,51 +41,33 @@ const run = async () => {
         }
     });
 
-    let botOfflineTimer;
-    const botOnlineEvent = async (incomeMessage) => {
-        console.log(`[core] bot ${incomeMessage.qq} auto relogin successful.`);
+    // noinspection ES6MissingAwait
+    (async () => {
+        let moduleName = "core/heartbeat";
+        let shutdown = false;
+        let sleep = timeout => new Promise(resolve => setTimeout(resolve, timeout));
 
-        if (!botOfflineTimer)
+        if (!botHeartbeatGroupNumber) {
+            console.log(`[${moduleName}] invalid heartbeat group number`);
+            console.log(`[${moduleName}] heartbeat disabled`);
             return;
-        clearTimeout(botOfflineTimer);
-        botOfflineTimer = null;
-    };
-    const botOfflineCallback = async (incomeMessage) => {
-        if (incomeMessage.qq !== botNumber) //ignore other bot's event
-            return;
-        console.log(`[core] bot has been dropped. waiting auto relogin in ${waitAutoReloginTimeout}s.`);
+        }
 
-        if (botOfflineTimer)
-            clearTimeout(botOfflineTimer);
-        botOfflineTimer = setTimeout(async () => {
-            let account = (miraiAutoLoginSettings?.accounts ?? []).find(item => item.account === botNumber);
-            if (!account) {
-                console.log(`[core] autoLogin config for bot(${botNumber}) not exists, stop force relogin`);
-                return;
-            }
-            if ((account.password?.kind ?? "").toUpperCase() !== "PLAIN") {
-                console.log(`[core] autoLogin config for bot(${botNumber})'s password type must be "PLAIN"`);
-                return;
-            }
-
+        await sleep(5000);
+        console.log(`[${moduleName}] heartbeat started`);
+        await mirai.api.sendGroupMessage(CreateMessageChain.plain(`[mirai-mybot-heartbeat] ${botNumber} heartbeat started`).items, botHeartbeatGroupNumber);
+        while (!shutdown) {
             try {
-                let response = await mirai.api.axios.post("/cmd/execute", {
-                    sessionKey: mirai.api.sessionKey,
-                    command: CreateMessageChain.plain("/login").plain(botNumber).plain(account.password.value).items,
-                });
-                if (response.data?.code !== 0) throw true;
+                let date = new Date();
+                await mirai.api.sendGroupMessage(CreateMessageChain.plain(`[mirai-mybot-heartbeat] ${botNumber} at ${date.toLocaleString("zh-CN")}(${+date})`).items, botHeartbeatGroupNumber);
+                console.log(`[${moduleName}] heartbeat sent`);
             } catch (e) {
                 console.log(e);
-                console.log(`[core] execute force relogin command failed`);
+                console.log(`[${moduleName}] send heartbeat failed`);
             }
-            await miraiMybotBootup();
-        }, waitAutoReloginTimeout * 1000);
-    };
-    mirai.on("BotOnlineEvent", botOnlineEvent);
-    mirai.on("BotReloginEvent", botOnlineEvent);
-    mirai.on("BotOfflineEventDropped", botOfflineCallback);
-    mirai.on("BotOfflineEventActive", botOfflineCallback);
-    mirai.on("BotOfflineEventForce", botOfflineCallback);
+            await sleep(botHeartbeatInterval * 1000);
+        }
+    })();
 
     await miraiMybotBootup();
 };
